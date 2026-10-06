@@ -9,32 +9,43 @@
 
 <body>
 
-    <div id="game">
-        <div id="hud">
-            <div>❤️ Lives: <span id="lives">3</span></div>
-            <div>💾 Data: <span id="data">0</span>/3</div>
-            <div>⭐ Score: <span id="score">0</span></div>
-        </div>
+<div id="game">
 
-        <div id="player"></div>
-
-        <div class="core core1"></div>
-        <div class="core core2"></div>
-        <div class="core core3"></div>
-
-        <div class="enemy enemy1"></div>
-        <div class="enemy enemy2"></div>
-
-        <div id="exit">EXIT</div>
-
-        <div id="message">
-            <h1>NEON ESCAPE</h1>
-            <p>Collect all 3 DATA CORES and reach the EXIT.</p>
-            <button onclick="startGame()">START GAME</button>
-        </div>
+    <!-- HUD -->
+    <div id="hud">
+        <div>❤️ Lives: <span id="lives">3</span></div>
+        <div>💾 Data: <span id="data">0</span>/3</div>
+        <div>⭐ Score: <span id="score">0</span></div>
+        <div>⏱️ Time: <span id="timer">60</span></div>
     </div>
 
-    <script src="game.js"></script>
+    <!-- Player -->
+    <div id="player">🚀</div>
+
+    <!-- Data Cores -->
+    <div class="core core1">💾</div>
+    <div class="core core2">💾</div>
+    <div class="core core3">💾</div>
+
+    <!-- Enemies -->
+    <div class="enemy enemy1">👾</div>
+    <div class="enemy enemy2">👾</div>
+
+    <!-- Exit -->
+    <div id="exit">EXIT</div>
+
+    <!-- Start / Game Over Screen -->
+    <div id="message">
+        <h1>NEON ESCAPE</h1>
+        <p id="messageText">
+            Collect all 3 DATA CORES and reach the EXIT.
+        </p>
+        <button onclick="startGame()">START GAME</button>
+    </div>
+
+</div>
+
+<script src="game.js"></script>
 
 </body>
 </html>

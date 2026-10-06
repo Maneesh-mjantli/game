@@ -1,534 +1,214 @@
+const game = document.getElementById("game");
 const player = document.getElementById("player");
-
-const cores = document.querySelectorAll(".core");
-const enemies = document.querySelectorAll(".enemy");
 
 const livesText = document.getElementById("lives");
 const dataText = document.getElementById("data");
 const scoreText = document.getElementById("score");
+const timerText = document.getElementById("timer");
 
 const message = document.getElementById("message");
+const messageText = document.getElementById("messageText");
 
+const cores = document.querySelectorAll(".core");
+const enemies = document.querySelectorAll(".enemy");
 
-// =============================
-// GAME VARIABLES
-// =============================
-
-let x = 100;
-let y = 150;
+let x = window.innerWidth / 2;
+let y = window.innerHeight * 0.7;
 
 let lives = 3;
 let data = 0;
 let score = 0;
-
-let level = 1;
-const maxLevel = 5;
+let time = 60;
 
 let gameRunning = false;
 
-let speed = 5;
+const keys = {};
 
+document.addEventListener("keydown", e => {
+    keys[e.key.toLowerCase()] = true;
+});
 
-// =============================
-// LEVEL DATA
-// =============================
-
-const levelData = {
-
-    1: {
-        cores: [
-            [25, 30],
-            [55, 65],
-            [75, 25]
-        ],
-
-        enemies: [
-            [40, 45],
-            [70, 70]
-        ]
-    },
-
-    2: {
-        cores: [
-            [15, 70],
-            [50, 25],
-            [80, 55]
-        ],
-
-        enemies: [
-            [30, 40],
-            [65, 30]
-        ]
-    },
-
-    3: {
-        cores: [
-            [20, 25],
-            [60, 70],
-            [85, 30]
-        ],
-
-        enemies: [
-            [45, 35],
-            [75, 65]
-        ]
-    },
-
-    4: {
-        cores: [
-            [15, 40],
-            [50, 75],
-            [80, 20]
-        ],
-
-        enemies: [
-            [35, 65],
-            [70, 40]
-        ]
-    },
-
-    5: {
-        cores: [
-            [20, 20],
-            [50, 50],
-            [80, 75]
-        ],
-
-        enemies: [
-            [40, 30],
-            [70, 55]
-        ]
-    }
-};
-
-
-// =============================
-// START GAME
-// =============================
+document.addEventListener("keyup", e => {
+    keys[e.key.toLowerCase()] = false;
+});
 
 function startGame() {
 
-    level = 1;
     lives = 3;
     data = 0;
     score = 0;
+    time = 60;
 
-    startLevel();
+    x = window.innerWidth / 2;
+    y = window.innerHeight * 0.7;
+
+    livesText.textContent = lives;
+    dataText.textContent = data;
+    scoreText.textContent = score;
+    timerText.textContent = time;
+
+    cores.forEach(core => {
+        core.style.display = "flex";
+    });
 
     message.style.display = "none";
 
     gameRunning = true;
+
+    gameLoop();
+    startTimer();
 }
 
-
-// =============================
-// START LEVEL
-// =============================
-
-function startLevel() {
-
-    x = 100;
-    y = 150;
-
-    data = 0;
-
-    // Increase speed every level
-    speed = 5 + (level - 1) * 0.8;
-
-    const currentLevel = levelData[level];
-
-    // Position cores
-    cores.forEach((core, index) => {
-
-        core.style.display = "block";
-
-        core.style.left =
-            currentLevel.cores[index][0] + "%";
-
-        core.style.top =
-            currentLevel.cores[index][1] + "%";
-    });
-
-
-    // Position enemies
-    enemies.forEach((enemy, index) => {
-
-        enemy.style.display = "block";
-
-        enemy.style.left =
-            currentLevel.enemies[index][0] + "%";
-
-        enemy.style.top =
-            currentLevel.enemies[index][1] + "%";
-    });
-
-
-    updatePlayer();
-    updateHUD();
-}
-
-
-// =============================
-// PLAYER MOVEMENT
-// =============================
-
-document.addEventListener("keydown", function(event) {
+function gameLoop() {
 
     if (!gameRunning) return;
 
+    movePlayer();
+    checkCores();
+    checkEnemies();
+    checkExit();
 
-    if (
-        event.key === "ArrowUp" ||
-        event.key.toLowerCase() === "w"
-    ) {
+    requestAnimationFrame(gameLoop);
+}
+
+function movePlayer() {
+
+    const speed = 5;
+
+    if (keys["arrowup"] || keys["w"]) {
         y -= speed;
     }
 
-
-    if (
-        event.key === "ArrowDown" ||
-        event.key.toLowerCase() === "s"
-    ) {
+    if (keys["arrowdown"] || keys["s"]) {
         y += speed;
     }
 
-
-    if (
-        event.key === "ArrowLeft" ||
-        event.key.toLowerCase() === "a"
-    ) {
+    if (keys["arrowleft"] || keys["a"]) {
         x -= speed;
     }
 
-
-    if (
-        event.key === "ArrowRight" ||
-        event.key.toLowerCase() === "d"
-    ) {
+    if (keys["arrowright"] || keys["d"]) {
         x += speed;
     }
 
+    const width = player.offsetWidth;
+    const height = player.offsetHeight;
 
-    // Keep player inside screen
-
-    const gameWidth = window.innerWidth;
-    const gameHeight = window.innerHeight;
-
-
-    x = Math.max(
-        0,
-        Math.min(x, gameWidth - 40)
-    );
-
-
-    y = Math.max(
-        50,
-        Math.min(y, gameHeight - 50)
-    );
-
-
-    updatePlayer();
-
-    checkCores();
-
-    checkEnemies();
-
-    checkExit();
-});
-
-
-// =============================
-// UPDATE PLAYER
-// =============================
-
-function updatePlayer() {
+    x = Math.max(width / 2, Math.min(window.innerWidth - width / 2, x));
+    y = Math.max(80, Math.min(window.innerHeight - height / 2, y));
 
     player.style.left = x + "px";
     player.style.top = y + "px";
 }
 
+function getDistance(a, b) {
 
-// =============================
-// UPDATE HUD
-// =============================
+    const ax = a.getBoundingClientRect().left;
+    const ay = a.getBoundingClientRect().top;
 
-function updateHUD() {
+    const bx = b.getBoundingClientRect().left;
+    const by = b.getBoundingClientRect().top;
 
-    livesText.textContent = lives;
-
-    dataText.textContent = data + "/3";
-
-    scoreText.textContent = score;
-
-    // Add level display
-    let levelText =
-        document.getElementById("level");
-
-    if (levelText) {
-        levelText.textContent = level;
-    }
+    return Math.hypot(ax - bx, ay - by);
 }
-
-
-// =============================
-// COLLISION DETECTION
-// =============================
-
-function isColliding(a, b) {
-
-    const r1 = a.getBoundingClientRect();
-
-    const r2 = b.getBoundingClientRect();
-
-
-    return !(
-        r1.right < r2.left ||
-        r1.left > r2.right ||
-        r1.bottom < r2.top ||
-        r1.top > r2.bottom
-    );
-}
-
-
-// =============================
-// CHECK DATA CORES
-// =============================
 
 function checkCores() {
 
-    cores.forEach(function(core) {
+    cores.forEach(core => {
 
-        if (
-            core.style.display !== "none" &&
-            isColliding(player, core)
-        ) {
+        if (core.style.display === "none") return;
+
+        if (getDistance(player, core) < 45) {
 
             core.style.display = "none";
 
             data++;
-
             score += 100;
 
-            updateHUD();
+            dataText.textContent = data;
+            scoreText.textContent = score;
         }
-
     });
 }
-
-
-// =============================
-// CHECK ENEMIES
-// =============================
 
 function checkEnemies() {
 
-    enemies.forEach(function(enemy) {
+    enemies.forEach(enemy => {
 
-        if (
-            enemy.style.display !== "none" &&
-            isColliding(player, enemy)
-        ) {
+        if (getDistance(player, enemy) < 45) {
 
             lives--;
 
-            x = 100;
-            y = 150;
+            livesText.textContent = lives;
 
-            updatePlayer();
-
-            updateHUD();
-
+            // Move player away
+            x = window.innerWidth / 2;
+            y = window.innerHeight * 0.7;
 
             if (lives <= 0) {
-
-                gameOver();
+                endGame(false);
             }
         }
-
     });
 }
 
-
-// =============================
-// CHECK EXIT
-// =============================
-
 function checkExit() {
+
+    if (data < 3) return;
 
     const exit = document.getElementById("exit");
 
+    if (getDistance(player, exit) < 70) {
 
-    // Player can exit only after
-    // collecting all 3 data cores
+        score += time * 10;
 
-    if (
-        data >= 3 &&
-        isColliding(player, exit)
-    ) {
+        scoreText.textContent = score;
 
-        nextLevel();
+        endGame(true);
     }
 }
 
+function startTimer() {
 
-// =============================
-// NEXT LEVEL
-// =============================
+    const timer = setInterval(() => {
 
-function nextLevel() {
+        if (!gameRunning) {
+            clearInterval(timer);
+            return;
+        }
 
-    gameRunning = false;
+        time--;
 
+        timerText.textContent = time;
 
-    if (level >= maxLevel) {
+        if (time <= 0) {
+            clearInterval(timer);
+            endGame(false);
+        }
 
-        gameComplete();
-
-        return;
-    }
-
-
-    level++;
-
-
-    message.style.display = "flex";
-
-
-    message.innerHTML = `
-
-        <h1>LEVEL ${level}</h1>
-
-        <p>
-            New sector detected.
-        </p>
-
-        <p>
-            Security level increased.
-        </p>
-
-        <button onclick="continueLevel()">
-            CONTINUE
-        </button>
-
-    `;
+    }, 1000);
 }
 
-
-// =============================
-// CONTINUE LEVEL
-// =============================
-
-function continueLevel() {
-
-    message.style.display = "none";
-
-    startLevel();
-
-    gameRunning = true;
-}
-
-
-// =============================
-// GAME OVER
-// =============================
-
-function gameOver() {
+function endGame(won) {
 
     gameRunning = false;
 
     message.style.display = "flex";
 
+    if (won) {
 
-    message.innerHTML = `
+        messageText.innerHTML =
+            `🎉 YOU ESCAPED!<br><br>
+             Final Score: <strong>${score}</strong>`;
 
-        <h1>SYSTEM FAILURE</h1>
+        message.querySelector("h1").textContent = "MISSION COMPLETE";
 
-        <p>
-            Your hacker was caught.
-        </p>
+    } else {
 
-        <p>
-            Level: ${level}
-        </p>
+        messageText.innerHTML =
+            `💀 GAME OVER<br><br>
+             Score: <strong>${score}</strong>`;
 
-        <p>
-            Score: ${score}
-        </p>
-
-        <button onclick="restartGame()">
-            TRY AGAIN
-        </button>
-
-    `;
-}
-
-
-// =============================
-// GAME COMPLETE
-// =============================
-
-function gameComplete() {
-
-    gameRunning = false;
-
-    message.style.display = "flex";
-
-
-    message.innerHTML = `
-
-        <h1>NEON ESCAPE</h1>
-
-        <p>
-            🎉 ALL LEVELS COMPLETED!
-        </p>
-
-        <p>
-            CITY NETWORK HACKED
-        </p>
-
-        <p>
-            FINAL SCORE: ${score}
-        </p>
-
-        <button onclick="restartGame()">
-            PLAY AGAIN
-        </button>
-
-    `;
-}
-
-
-// =============================
-// RESTART
-// =============================
-
-function restartGame() {
-
-    location.reload();
-}
-
-
-// =============================
-// CONTINUOUS EXIT CHECK
-// =============================
-
-// This makes the EXIT collision
-// much more reliable.
-
-function gameLoop() {
-
-    if (gameRunning) {
-
-        checkCores();
-
-        checkEnemies();
-
-        checkExit();
+        message.querySelector("h1").textContent = "GAME OVER";
     }
-
-
-    requestAnimationFrame(gameLoop);
 }
-
-
-gameLoop();
